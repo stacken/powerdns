@@ -1,18 +1,16 @@
 FROM ubuntu:14.04
-
-RUN apt-get update 
-RUN apt-get install -y pdns-server
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get install -y mysql-server-5.5
-RUN apt-get install -y pdns-backend-mysql
-RUN apt-get install -y dnsutils
-RUN apt-get install -y apache2 libapache2-mod-php5 php5-cgi 
-RUN apt-get install -y php5-mysql
+
+RUN apt-get update && apt-get install -y pdns-server apache2 postgresql-9.3 \
+	    pdns-backend-pgsql
 
 ADD start.sh /start.sh
 ADD schema.sql /schema.sql
-ADD pdns.conf /etc/powerdns/pdns.d/pdns.local.gmysql.conf
+ADD pdns.conf /etc/powerdns/pdns.d/pdns.local.gpgsql.conf
+
 RUN rm /etc/powerdns/pdns.d/pdns.simplebind.conf
 RUN rm /etc/powerdns/pdns.d/pdns.local.conf
 RUN rm /var/www/html/index.html
+RUN su - postgres -c 'mkdir -p `pwd`/data && \
+	    /usr/lib/postgresql/9.3/bin/initdb  -D `pwd`/data'
 RUN chmod +x /start.sh 
