@@ -3,6 +3,8 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && apt-get install -y pdns-server apache2 postgresql-9.3 \
 	    pdns-backend-pgsql
+RUN apt-get install -y libapache2-mod-php5 
+RUN apt-get install -y php5-pgsql
 
 ADD start.sh /start.sh
 ADD schema.sql /schema.sql
