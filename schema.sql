@@ -1,3 +1,5 @@
+CREATE ROLE pdns WITH LOGIN ENCRYPTED PASSWORD 'secret';
+
 CREATE TABLE domains (
   id                    SERIAL PRIMARY KEY,
   name                  VARCHAR(255) NOT NULL,
@@ -93,15 +95,6 @@ CREATE TABLE tsigkeys (
 );
 
 CREATE UNIQUE INDEX namealgoindex ON tsigkeys(name, algorithm);
-
-
-
-CREATE ROLE pdns WITH PASSWORD '12345';
-ALTER ROLE pdns WITH LOGIN;
-CREATE SCHEMA dns AUTHORIZATION pdns;
-GRANT SELECT, INSERT, UPDATE, DELETE
-ON ALL TABLES IN SCHEMA dns 
-TO user_name;
 
 
 INSERT INTO domains (name, type) values ('example.com', 'NATIVE');
