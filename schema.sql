@@ -3,7 +3,7 @@ CREATE TABLE domains (
   name                  VARCHAR(255) NOT NULL,
   master                VARCHAR(128) DEFAULT NULL,
   last_check            INT DEFAULT NULL,
-  type                  VARCHAR(6) NOT NULL,
+  type                  VARCHAR(10) NOT NULL,
   notified_serial       INT DEFAULT NULL,
   account               VARCHAR(40) DEFAULT NULL,
   CONSTRAINT c_lowercase_name CHECK (((name)::TEXT = LOWER((name)::TEXT)))
@@ -114,3 +114,6 @@ VALUES (1,'example.com','mail.example.com','MX',120,25);
 CREATE ROLE pdns WITH LOGIN ENCRYPTED PASSWORD 'secret';
 GRANT ALL PRIVILEGES ON domains, records, supermasters, comments,
 			domainmetadata, cryptokeys, tsigkeys TO pdns; 
+GRANT ALL PRIVILEGES ON SEQUENCE comments_id_seq, cryptokeys_id_seq,     
+			domainmetadata_id_seq, domains_id_seq, records_id_seq,
+			tsigkeys_id_seq TO pdns;
