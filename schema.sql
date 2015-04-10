@@ -1,5 +1,3 @@
-CREATE ROLE pdns WITH LOGIN ENCRYPTED PASSWORD 'secret';
-
 CREATE TABLE domains (
   id                    SERIAL PRIMARY KEY,
   name                  VARCHAR(255) NOT NULL,
@@ -113,3 +111,6 @@ VALUES (1,'localhost.example.com','127.0.0.1','A',120,NULL);
 INSERT INTO records (domain_id, name, content, type,ttl,prio)
 VALUES (1,'example.com','mail.example.com','MX',120,25);
 
+CREATE ROLE pdns WITH LOGIN ENCRYPTED PASSWORD 'secret';
+GRANT ALL PRIVILEGES ON domains, records, supermasters, comments,
+			domainmetadata, cryptokeys, tsigkeys TO pdns; 
