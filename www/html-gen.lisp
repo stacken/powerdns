@@ -1,5 +1,6 @@
-;;; written by Fabian Ström
 ;;;; html-gen.lisp
+
+(in-package #:powerdns)
 
 (defmacro with-gensyms ((&rest names) &body body)
   "The with-gensyms macro, derived from Practical Common Lisp."
@@ -8,20 +9,30 @@
 	    collect `(,n  (gensym (format nil "~a-" (string ',n)))))
      ,@body))
 
+;; The void elements according to
+;; http://www.w3.org/TR/html-markup/syntax.html#void-element
+(defparameter *void-elements* '(:area :base :br :col
+                                :command :embed :hr :img
+                                :input :keygen :link :meta
+                                :param :source :track :wbr))
+
+(defun void-element-p (element)
+  (member element *void-elements*))
+
 (defparameter *format-args* ())
 
 (defun print-attribute-value (attr val stream)
   (if (or (stringp attr) (keywordp attr))
       (progn (format stream " ~a=\"" (string-downcase attr))
 	     (if (or (stringp val) (keywordp val))
-		 (format stream "~a\"" (string val))
+		 (format stream "~a\"" val)
 		 (progn (format stream "~~a\"") ;; val is a symbol or a list
 			(push val *format-args*))))
       (progn ;; attr is a symbol or a list
 	(format stream "~~a=\"")
 	(push attr *format-args*)
 	(if (or (stringp val) (keywordp val))
-	    (format stream "~a\"" (string val))
+	    (format stream "~a\"" val)
 	    (progn (format stream "~~a\"") ;; val is a symbol or a list
 		   (push val *format-args*))))))
 
@@ -41,8 +52,10 @@
   (let* ((format-string
 	  (with-output-to-string (format-string)
 	    (macrolet ((indent-if () `(if indent (format nil "~%~a" indent) "")))
-	      (labels ((increase-indent () (when indent (setf indent (format nil "~a~a" indent indent-level))))
-		       (decrease-indent () (when indent (setf indent (subseq indent (length indent-level)))))
+	      (labels ((increase-indent ()
+                         (when indent (setf indent (format nil "~a~a" indent indent-level))))
+		       (decrease-indent ()
+                         (when indent (setf indent (subseq indent (length indent-level)))))
 		       (gen (stmts)
 			 (cond ((null stmts))
 
@@ -55,21 +68,26 @@
 					       (indent-if)
 					       (string-downcase (car stmts)))
 				       (let ((rest (print-until-no-keywords (cdr stmts) format-string)))
-					 (format format-string ">")
-					 (increase-indent)
-					 (gen rest)
-					 (decrease-indent)
-					 (format format-string "~a</~a>"
-						 (indent-if) (string-downcase (car stmts))))))
-
+                                         (let ((element (car stmts)))
+                                           (if (not (void-element-p element))
+                                               (progn
+                                                 (format format-string ">")
+                                                 (increase-indent)
+                                                 (gen rest)
+                                                 (decrease-indent)
+                                                 (format format-string "~a</~a>"
+                                                         (indent-if) (string-downcase (car stmts))))
+                                             (progn
+                                               (format format-string "/>")))))))
 
 			       ((stringp (car stmts)) (progn (format format-string "~a~a"
 								     (indent-if) (car stmts))
 							     (gen (cdr stmts))))
 
-			       (t (progn (format format-string "~a~~a" (indent-if))
-					 (push (car stmts) *format-args*)
-					 (gen (cdr stmts)))))))
+                               (t (progn (when (not (null (car stmts)))
+                                           (progn (format format-string "~a~~a" (indent-if))
+                                             (push (car stmts) *format-args*)))
+                                    (gen (cdr stmts)))))))
 		(gen list-of-statements))))))
     (when trim-whitespace (setf format-string (string-trim '(#\Newline #\Return #\Space) format-string)))
     (let ((args (reverse *format-args*)))
@@ -80,4 +98,3 @@
   (with-gensyms (stream)
     `(with-output-to-string (,stream)
        (generate-html (,stream) ,args))))
-
