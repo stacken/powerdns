@@ -64,5 +64,5 @@
 			     (:input :type "password" :id "password"
 				     :name "password" :class "form-control"))
 		       (:div :class "form-group"
-			     (:input :type "button" :class "btn btn-default" :value "Log in"))))
+			     (:input :type "submit" :class "btn btn-default" :value "Log in"))))
 	  (:div :class "col-sm-3" "&nbsp;")))
